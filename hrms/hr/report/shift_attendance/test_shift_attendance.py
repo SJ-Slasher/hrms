@@ -278,3 +278,17 @@ def make_checkin(employee, time, log_type):
 			"log_type": log_type,
 		}
 	).insert()
+
+def test_employment_type_filter(self):
+	filters = frappe._dict(
+    {
+        "company": "_Test Company",
+        "from_date": date(2023, 1, 1),
+        "to_date": date(2023, 1, 3),
+        "employment_type": "Contract",
+    }
+)
+
+report = execute(filters)
+
+data = report[1]

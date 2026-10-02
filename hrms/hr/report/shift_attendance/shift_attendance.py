@@ -244,12 +244,15 @@ def get_attendance_with_checkins(filters):
 
 def get_base_attendance_query(filters):
 	attendance = frappe.qb.DocType("Attendance")
-	shift_type = frappe.qb.DocType("Shift Type")
+shift_type = frappe.qb.DocType("Shift Type")
+employee = frappe.qb.DocType("Employee")
 
-	query = (
-		frappe.qb.from_(attendance)
-		.inner_join(shift_type)
-		.on(attendance.shift == shift_type.name)
+query = (
+    frappe.qb.from_(attendance)
+    .inner_join(shift_type)
+    .on(attendance.shift == shift_type.name)
+    .inner_join(employee)
+    .on(attendance.employee == employee.name)
 		.select(
 			attendance.name,
 			attendance.employee,
@@ -270,14 +273,16 @@ def get_base_attendance_query(filters):
 	)
 
 	for field in filters:
-		if field == "from_date":
-			query = query.where(attendance.attendance_date >= filters.from_date)
-		elif field == "to_date":
-			query = query.where(attendance.attendance_date <= filters.to_date)
-		elif field in ["consider_grace_period", "include_attendance_without_checkins"]:
-			continue
-		else:
-			query = query.where(attendance[field] == filters[field])
+    if field == "from_date":
+        query = query.where(attendance.attendance_date >= filters.from_date)
+    elif field == "to_date":
+        query = query.where(attendance.attendance_date <= filters.to_date)
+    elif field == "employment_type":
+        query = query.where(employee.employment_type == filters.employment_type)
+    elif field in ["consider_grace_period", "include_attendance_without_checkins"]:
+        continue
+    else:
+        query = query.where(attendance[field] == filters[field])
 
 	query = query.where(Criterion.all(build_qb_match_conditions("Attendance")))
 	return query
